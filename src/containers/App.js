@@ -4,19 +4,85 @@ import { useState , useEffect } from "react";
 import Menu from '../components/Menu';
 import MenuIcon from '@material-ui/icons/Menu';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import Button from '@material-ui/core/Button';
 
 import styled from 'styled-components';
+import firebase from 'firebase';
+import firebaseConfig from '../firebase-config';
 
+firebase.initializeApp(firebaseConfig);
+
+function onUtenteLoggato(utenteLoggatoCallBack){
+  // eseguirà questo codice del return, interno al metodo, quando l'utente si sarà loggato o sloggato
+  return firebase.auth().onAuthStateChanged((utenteParametro) => {
+    if (utenteParametro){ // così vuol dire che è loggato
+      console.log('utenteParametro: ', utenteParametro); // cosi possiamo vedere quali dati ci passa firebase
+      utenteLoggatoCallBack({
+        loggato: true,
+        nome: utenteParametro.displayName,
+        email: utenteParametro.email,
+        foto: utenteParametro.photoURL,
+        uid: utenteParametro.uid,
+      }); 
+    }else{
+      utenteLoggatoCallBack({
+        loggato: false,
+      }); 
+    }
+  })
+};
+
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+const loggatiConGoogle = () => {
+  auth.signInWithPopup(provider);
+};
+
+
+const logout = () => {
+  firebase.auth().signOut();
+
+};
 
 function App() {
   // stato che utilizzeremo per aprire e chiudere il nostro menu laterale. Il menu può solo essere aperto o chiudo, perciò utilizzo un booleano (true/aperto, false/chiuso)
   const [menuVisibile, setMenuVisibile] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [utente, setUtente] = useState({loggato: false});
+
   // grazie allo useEffetc rendiamo vero il nostro loading, lo useEffetc è composto da due elementi separati da virgola, il primo è una funzione il secondo è un array vuoto che indica che dovrà far scatenare la funzione quando l'app sarà pronta (il didMount) e allora gli diremo alla funzione di impostare il loading a false
   useEffect(() => {
-    setLoading(false);
+    function utenteLoggatoCallBack(utenteObj){ // una CallBack è una chiamata ad una funzione, che dovrà avvenire soltanto ad un certo momento e non seguirà il normale flusso degli eventi, in questo caso si avvierà soltanto dopo che firebase ci avrà restituito il "loggato:true" al nostro parametro "utenteObj"
+      setUtente(utenteObj); 
+   
+    } 
+    onUtenteLoggato(utenteLoggatoCallBack);
+    setLoading(false);// questa è quella che determina la fine del loading e la spostiamo qui dentro perchè io voglio assicurarmi che il loading scompaia solo dopo che Firebase mi avrà restituito i dati dell'utente, altrimenti potrebbe scomparire il login, comparire l'app, ma ancora non ho i dati dell'utente
+    
   }, [])
+
+  useEffect(() => { // questo useEffect eseguirà il codice al suo interno, tutte le volte che lo stato di utente muterà, perchè abbiamo messo "utente" nelle quadre finali
+    if(utente.uid){ // se esiste lo user ID, per cui l'utente è loggato
+      const utenteReferenza = firebase.database().ref('/utenti/');
+      utenteReferenza.once("value",(utenteDb) => { // once è tipo "on" con la differenza che viene eseguita una volta sola
+        const cloneUtenteDb = utenteDb.val(); // come prima cosa andiamo a leggere e prenderci tutti i valori, i nodi principali del DB per verificare se nel db c'è già un nodo con lo stesso uid  
+        if(cloneUtenteDb){ // così verifico se l'utente già esiste
+          return null; // ok allora non fare nulla
+        } else { // se invece non esiste
+          const utenteDbObj = {};
+          utenteDbObj[utente.uid]={
+            email: utente.email,
+            nome: utente.nome,
+            foto: utente.foto
+          }
+          utenteReferenza.set(utenteDbObj)
+        }
+      })
+    }
+  }, [utente])
+
   const apriChiudiMenu = () => {
     // con il punto esclamativo prima di una variabile andiamo a selezionare il valore opposto di un booleano 
     // (se il valore di menuVisibile è true, noi lo mettiamo a false)
@@ -34,6 +100,14 @@ function App() {
   return (
     <Wrapper className="App"> 
       <header className="app-header">
+     
+      {!utente.loggato && (<Button onClick={() => loggatiConGoogle()}>ACCEDI CON GOOGLE</Button>)}
+      {utente.loggato && (
+        <div>
+          <div>Ciao {utente.nome} <img src={utente.foto} className="fotoUtente"/></div>
+          <Button onClick={() => logout()}>ESCI</Button>
+        </div>
+        )}
         {/* questo bottone determina l'apertura o la chiusura del menu*/}
         <MenuIcon onClick={() => apriChiudiMenu()} />
         <Menu menuVisibile={menuVisibile} apriChiudiMenu={apriChiudiMenu}/>
@@ -52,6 +126,13 @@ const Wrapper = styled.div`
     color: white;
     text-align: right;
   }
+  .fotoUtente{
+    border-radius: 50%!important;
+    width: 35px!important;
+    vertical-align: middle!important;
+    margin-left: 10px!important;
+    margin-right: 10px!important;
+  }
 `;
 
 const WrapperLoading = styled.div`
@@ -63,6 +144,7 @@ const WrapperLoading = styled.div`
     .MuiCircularProgress-colorPrimary {
       color: #e0902c;
   }
+ 
 `;
 
 
