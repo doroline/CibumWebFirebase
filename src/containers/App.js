@@ -4,7 +4,7 @@ import { useState , useEffect } from "react";
 import Menu from '../components/Menu';
 import MenuIcon from '@material-ui/icons/Menu';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import Button from '@material-ui/core/Button';
+
 
 import styled from 'styled-components';
 import firebase from 'firebase';
@@ -39,7 +39,6 @@ const loggatiConGoogle = () => {
   auth.signInWithPopup(provider);
 };
 
-
 const logout = () => {
   firebase.auth().signOut();
 
@@ -54,30 +53,28 @@ function App() {
 
   // grazie allo useEffetc rendiamo vero il nostro loading, lo useEffetc è composto da due elementi separati da virgola, il primo è una funzione il secondo è un array vuoto che indica che dovrà far scatenare la funzione quando l'app sarà pronta (il didMount) e allora gli diremo alla funzione di impostare il loading a false
   useEffect(() => {
-    function utenteLoggatoCallBack(utenteObj){ // una CallBack è una chiamata ad una funzione, che dovrà avvenire soltanto ad un certo momento e non seguirà il normale flusso degli eventi, in questo caso si avvierà soltanto dopo che firebase ci avrà restituito il "loggato:true" al nostro parametro "utenteObj"
+    function utenteLoggatoCallBack(utenteObj){ // una CallBack è una chiamata ad una funzione, che dovrà avvenire soltanto ad un certo momento e non seguirà il normale flusso degli eventi, in questo caso si avvierà soltanto dopo che firebase ci avrà restituito il "loggato:true" al nostro parametro "utenteObj" e ci permetterà di invocare i cambi di stato anche al di fuori del nostro componente!
       setUtente(utenteObj); 
-   
+      setLoading(false);// questa è quella che determina la fine del loading e la spostiamo qui dentro perchè io voglio assicurarmi che il loading scompaia solo dopo che Firebase mi avrà restituito i dati dell'utente, altrimenti potrebbe scomparire il login, comparire l'app, ma ancora non ho i dati dell'utente
     } 
-    onUtenteLoggato(utenteLoggatoCallBack);
-    setLoading(false);// questa è quella che determina la fine del loading e la spostiamo qui dentro perchè io voglio assicurarmi che il loading scompaia solo dopo che Firebase mi avrà restituito i dati dell'utente, altrimenti potrebbe scomparire il login, comparire l'app, ma ancora non ho i dati dell'utente
+    onUtenteLoggato(utenteLoggatoCallBack); // funzione che intercetta l'avvenuto cambio di stato della login
+
     
   }, [])
 
   useEffect(() => { // questo useEffect eseguirà il codice al suo interno, tutte le volte che lo stato di utente muterà, perchè abbiamo messo "utente" nelle quadre finali
     if(utente.uid){ // se esiste lo user ID, per cui l'utente è loggato
-      const utenteReferenza = firebase.database().ref('/utenti/');
+      const utenteReferenza = firebase.database().ref('/utenti/' + utente.uid);
       utenteReferenza.once("value",(utenteDb) => { // once è tipo "on" con la differenza che viene eseguita una volta sola
         const cloneUtenteDb = utenteDb.val(); // come prima cosa andiamo a leggere e prenderci tutti i valori, i nodi principali del DB per verificare se nel db c'è già un nodo con lo stesso uid  
         if(cloneUtenteDb){ // così verifico se l'utente già esiste
           return null; // ok allora non fare nulla
         } else { // se invece non esiste
-          const utenteDbObj = {};
-          utenteDbObj[utente.uid]={
+          utenteReferenza.set({
             email: utente.email,
             nome: utente.nome,
             foto: utente.foto
-          }
-          utenteReferenza.set(utenteDbObj)
+          })
         }
       })
     }
@@ -101,16 +98,16 @@ function App() {
     <Wrapper className="App"> 
       <header className="app-header">
      
-      {!utente.loggato && (<Button onClick={() => loggatiConGoogle()}>ACCEDI CON GOOGLE</Button>)}
-      {utente.loggato && (
-        <div>
-          <div>Ciao {utente.nome} <img src={utente.foto} className="fotoUtente"/></div>
-          <Button onClick={() => logout()}>ESCI</Button>
-        </div>
-        )}
+      
         {/* questo bottone determina l'apertura o la chiusura del menu*/}
         <MenuIcon onClick={() => apriChiudiMenu()} />
-        <Menu menuVisibile={menuVisibile} apriChiudiMenu={apriChiudiMenu}/>
+        <Menu 
+          menuVisibile={menuVisibile} 
+          apriChiudiMenu={apriChiudiMenu}
+          logout={logout}
+          loggatiConGoogle={loggatiConGoogle}
+          utente={utente}
+        />
       </header>
     </Wrapper>
   );
@@ -125,13 +122,6 @@ const Wrapper = styled.div`
     font-size: 20px;
     color: white;
     text-align: right;
-  }
-  .fotoUtente{
-    border-radius: 50%!important;
-    width: 35px!important;
-    vertical-align: middle!important;
-    margin-left: 10px!important;
-    margin-right: 10px!important;
   }
 `;
 
