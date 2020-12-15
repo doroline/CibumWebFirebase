@@ -4,11 +4,28 @@ import SwipeableDrawer from "@material-ui/core/SwipeableDrawer";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
+import Switch from "@material-ui/core/Switch";
 import Button from '@material-ui/core/Button';
 
 import styled from "styled-components";
 
 const Menu = (props) => {
+
+  const [state, setState] = useState({checkedA: false});
+  const [colore, setColore]=useState("white");
+
+ 
+  const handleChange = (event) => {
+    setState({[event.target.name]: event.target.checked });
+    if (state.checkedA) {
+      setColore("white");
+   }else{
+     setColore("orange");
+   }
+  };
+
+
+
   return (
     <>
       {/* 
@@ -21,10 +38,10 @@ const Menu = (props) => {
         anchor="right"
         open={props.menuVisibile}
         onClose={() => props.apriChiudiMenu()}
-        onOpen={() => props.apriChiudiMenu()}
+        onOpen={() => props.apriChiudiMenu()} 
       >
         {/* List svolge il ruolo di <ul> e ListItem quello di <li>: in questo caso potrei utilizzare una costante ed eseguire un .map per ciclarmi tutte le pagine della mia app che voglio elencare */}
-        <List>
+        <List style={{ backgroundColor: colore }}>
         <ListItem button key="ciao">
             {props.utente.loggato && (
                 <div>
@@ -52,6 +69,17 @@ const Menu = (props) => {
             <Button onClick={() => props.logout()}>ESCI</Button>
           </div>
         )}
+
+        <div className="contenitoreSwitch">
+      sfondo bianco
+      <Switch
+        checked={state.checkedA}
+        onChange={handleChange}
+        name="checkedA"
+        inputProps={{ "aria-label": "primary checkbox" }}
+      />
+      sfondo arancio
+    </div>
       </SwipeableDrawer>
     </>
   );

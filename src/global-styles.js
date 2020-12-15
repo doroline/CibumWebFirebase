@@ -8,6 +8,10 @@ const GlobalStyles = createGlobalStyle`
     margin-left: 10px!important;
     margin-right: 10px!important;
   }
+  
+  .MuiDrawer-paper {
+    width: 50%;
+  }
   .MuiButton-label {
     width: 100%;
     display: inherit;
@@ -17,6 +21,17 @@ const GlobalStyles = createGlobalStyle`
     color: white;
     padding: 8px;
     border-radius: 6px;
+}
+
+.MuiSwitch-colorSecondary.Mui-checked + .MuiSwitch-track {
+    background-color: #737373!important;
+}
+.MuiSwitch-colorSecondary.Mui-checked {
+    color: #ff690e!important;
+}
+.contenitoreSwitch{
+
+    text-align: center;
 }
 `;
 
