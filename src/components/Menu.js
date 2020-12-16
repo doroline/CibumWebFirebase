@@ -7,28 +7,26 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Switch from "@material-ui/core/Switch";
 import Button from '@material-ui/core/Button';
 
-import styled from "styled-components";
-import { easing } from "@material-ui/core";
-
 const Menu = (props) => {
 
   const [state, setState] = useState({checkedA: false});
   const [colore, setColore]=useState("bgWhite");
 
   const cambiaColore = () =>{
-    if (colore==="white"){
-      setColore('bgOrange');
+    if (colore==="bgWhite"){
+      setColore('bgBlack');
     }else{
       setColore('bgWhite');
     }
   }
+
   const handleChange = (event) => {
     setState({[event.target.name]: event.target.checked });
   };
 
-  const dueFunzioniInsieme = (a) =>{
-   handleChange(a);
-    cambiaColore();
+  const dueFunzioniInsieme = (e) =>{
+   handleChange(e);
+  cambiaColore();
   }
 
 
@@ -81,7 +79,7 @@ const Menu = (props) => {
       sfondo chiaro
       <Switch
         checked={state.checkedA}
-        onChange={() => dueFunzioniInsieme("e")}
+        onChange={(e) => dueFunzioniInsieme(e)}
         name="checkedA"
         inputProps={{ "aria-label": "primary checkbox" }}
       />
