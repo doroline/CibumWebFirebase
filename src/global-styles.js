@@ -8,9 +8,23 @@ const GlobalStyles = createGlobalStyle`
     margin-left: 10px!important;
     margin-right: 10px!important;
   }
-  
+  .menuLaterale{
+    background-color:red!important;
+  }
+  .bgBlack{
+    .MuiDrawer-paper {
+      background-color: #333332;
+      color:white;
+    }
+  }
+  .bgWhite{
+    .MuiDrawer-paper {
+      background-color: white;
+      color:black;
+    }
+  }
   .MuiDrawer-paper {
-    width: 50%;
+    width: 60%;
   }
   .MuiButton-label {
     width: 100%;
@@ -27,10 +41,10 @@ const GlobalStyles = createGlobalStyle`
     background-color: #737373!important;
 }
 .MuiSwitch-colorSecondary.Mui-checked {
-    color: #ff690e!important;
+    color: #080706!important;
 }
 .contenitoreSwitch{
-
+  font-size: 11px;
     text-align: center;
 }
 `;
