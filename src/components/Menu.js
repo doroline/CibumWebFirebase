@@ -79,7 +79,7 @@ const Menu = (props) => {
       sfondo chiaro
       <Switch
         checked={state.checkedA}
-        onChange={(e) => dueFunzioniInsieme(e)}
+        onChange={e => dueFunzioniInsieme(e)}
         name="checkedA"
         inputProps={{ "aria-label": "primary checkbox" }}
       />

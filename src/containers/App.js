@@ -1,4 +1,5 @@
 import { useState , useEffect } from "react";
+import Home from './Home';
 
 // importiamo gli elementi di material ui che ci occorrono : il menu vero e proprio e gli elementi list, list item e list text per stilizzare i bottoni che avremo nel menu
 import Menu from '../components/Menu';
@@ -88,14 +89,14 @@ function App() {
   };
    if (loading) {
       return(
-        <WrapperLoading>
+        <ContenitoreLoading>
           <CircularProgress />
-        </WrapperLoading>
+        </ContenitoreLoading>
       );
   }
   // questo return verrà letto SOLAMENTE se il loading sarà a false
   return (
-    <Wrapper className="App"> 
+    <Contenitore className="App"> 
       <header className="app-header">
      
       
@@ -109,10 +110,13 @@ function App() {
           utente={utente}
         />
       </header>
-    </Wrapper>
+      <div className="app-corpo">
+        <Home />
+      </div>
+    </Contenitore>
   );
   }
-const Wrapper = styled.div`
+const Contenitore = styled.div`
   .app-header {
     background-color: #e0902c;
     display: flex;
@@ -125,7 +129,7 @@ const Wrapper = styled.div`
   }
 `;
 
-const WrapperLoading = styled.div`
+const ContenitoreLoading = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
