@@ -1,5 +1,11 @@
 import { useState } from "react";
 
+import {
+  useHistory,
+  useLocation,
+} from "react-router-dom";
+import {ROTTE} from '../costanti';
+
 import SwipeableDrawer from "@material-ui/core/SwipeableDrawer";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -7,8 +13,18 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Switch from "@material-ui/core/Switch";
 import Button from '@material-ui/core/Button';
 
-const Menu = (props) => {
 
+const Menu = (props) => {
+  // costanti per gli Hook di Routing
+ const listaRottePrecedenti = useHistory();
+ const rottaCorrente = useLocation();
+
+  const cambiaRotta = (nuovaRotta) => {
+    listaRottePrecedenti.push(nuovaRotta);
+    props.apriChiudiMenu();
+  };
+
+  //costanti e metodi per il cambio di colore dello switch -- inizio cambio di colore
   const [state, setState] = useState({checkedA: false});
   const [colore, setColore]=useState("bgWhite");
 
@@ -28,8 +44,7 @@ const Menu = (props) => {
    handleChange(e);
   cambiaColore();
   }
-
-
+// fine cambio di colore
   return (
     <>
       {/* 
@@ -56,13 +71,13 @@ const Menu = (props) => {
             )}
           </ListItem>
   
-          <ListItem button key="Home">
+          <ListItem button key="Home" onClick={()=> cambiaRotta(ROTTE.HOME)}>
             <ListItemText primary="Home page" />
           </ListItem>
-          <ListItem button key="Ricette">
+          <ListItem button key="Ricette" onClick={()=> cambiaRotta(ROTTE.RICETTE)}>
             <ListItemText primary="Ricette" />
           </ListItem>
-          <ListItem button key="Lista della Spesa">
+          <ListItem button key="Lista della Spesa" onClick={() => cambiaRotta(ROTTE.LISTA_DELLA_SPESA)}>
             <ListItemText primary="Lista della Spesa" />
           </ListItem>
         </List>
