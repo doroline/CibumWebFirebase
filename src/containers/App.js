@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext } from "react";
 import Home from "./Home";
 import Ricette from "./Ricette";
 import ListaSpesa from "./ListaSpesa";
@@ -49,6 +49,8 @@ const loggatiConGoogle = () => {
 const logout = () => {
   firebase.auth().signOut();
 };
+
+export const RicetteContext = createContext();
 
 function App() {
   // stato che utilizzeremo per aprire e chiudere il nostro menu laterale. Il menu può solo essere aperto o chiudo, perciò utilizzo un booleano (true/aperto, false/chiuso)
@@ -105,34 +107,36 @@ function App() {
   }
   // questo return verrà letto SOLAMENTE se il loading sarà a false
   return (
-    <Router>
-      <Contenitore className="App">
-        <header className="app-header">
-          {/* questo bottone determina l'apertura o la chiusura del menu*/}
-          <MenuIcon onClick={() => apriChiudiMenu()} />
-          <Menu
-            menuVisibile={menuVisibile}
-            apriChiudiMenu={apriChiudiMenu}
-            logout={logout}
-            loggatiConGoogle={loggatiConGoogle}
-            utente={utente}
-          />
-        </header>
-        <div className="app-corpo">
-          <Switch>
-            <Route path={ROTTE.RICETTE}>
-              <Ricette />
-            </Route>
-            <Route exact path={ROTTE.LISTA_DELLA_SPESA}>
-              <ListaSpesa />
-            </Route>
-            <Route path={ROTTE.HOME}>
-              <Home />
-            </Route>
-          </Switch>
-        </div>
-      </Contenitore>
-    </Router>
+    <RicetteContext.Provider value={"sono l'info che cercavi"}>
+      <Router>
+        <Contenitore className="App">
+          <header className="app-header">
+            {/* questo bottone determina l'apertura o la chiusura del menu*/}
+            <MenuIcon onClick={() => apriChiudiMenu()} />
+            <Menu
+              menuVisibile={menuVisibile}
+              apriChiudiMenu={apriChiudiMenu}
+              logout={logout}
+              loggatiConGoogle={loggatiConGoogle}
+              utente={utente}
+            />
+          </header>
+          <div className="app-corpo">
+            <Switch>
+              <Route path={ROTTE.RICETTE}>
+                <Ricette />
+              </Route>
+              <Route exact path={ROTTE.LISTA_DELLA_SPESA}>
+                <ListaSpesa />
+              </Route>
+              <Route path={ROTTE.HOME}>
+                <Home />
+              </Route>
+            </Switch>
+          </div>
+        </Contenitore>
+      </Router>
+    </RicetteContext.Provider>
   );
 }
 const Contenitore = styled.div`
