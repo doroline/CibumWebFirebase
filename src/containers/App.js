@@ -15,6 +15,7 @@ import firebaseConfig from "../firebase-config";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import { ROTTE } from "../costanti";
+import DettaglioRicetta from "./DettaglioRicetta";
 
 firebase.initializeApp(firebaseConfig);
 
@@ -53,6 +54,12 @@ const logout = () => {
 export const RicetteContext = createContext();
 
 function App() {
+  // qui creo le variabili di stato per prendere i dati dal nodo ricette di firebase
+  const [chiaviRicette, setChiaviRicette] = useState([]); // la inizializzo come un array vuota
+  const [oggettoRicette, setOggettoRicette] = useState({});// la inizializzo come oggetto
+
+
+
   // stato che utilizzeremo per aprire e chiudere il nostro menu laterale. Il menu può solo essere aperto o chiudo, perciò utilizzo un booleano (true/aperto, false/chiuso)
   const [menuVisibile, setMenuVisibile] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -65,8 +72,17 @@ function App() {
       // una CallBack è una chiamata ad una funzione, che dovrà avvenire soltanto ad un certo momento e non seguirà il normale flusso degli eventi, in questo caso si avvierà soltanto dopo che firebase ci avrà restituito il "loggato:true" al nostro parametro "utenteObj" e ci permetterà di invocare i cambi di stato anche al di fuori del nostro componente!
       setUtente(utenteObj);
       setLoading(false); // questa è quella che determina la fine del loading e la spostiamo qui dentro perchè io voglio assicurarmi che il loading scompaia solo dopo che Firebase mi avrà restituito i dati dell'utente, altrimenti potrebbe scomparire il login, comparire l'app, ma ancora non ho i dati dell'utente
-    }
+    };
     onUtenteLoggato(utenteLoggatoCallBack); // funzione che intercetta l'avvenuto cambio di stato della login
+  
+    const ricetteReferenza = firebase.database().ref('/ricette');
+    ricetteReferenza.on("value", (ricetteDb) => { // prendo i valori,value, e li metto in ricetteDb
+      const ricetteObj = ricetteDb.val(); // passo i valori di ricetteDb a ricetteObj
+      const ricetteArray = Object.keys(ricetteObj); // questa funziona JS ci restituisce sottonforma di array soltanto le chiavi sotto forma di oggetto
+      setOggettoRicette(ricetteObj);
+      setChiaviRicette(ricetteArray);
+      console.log(chiaviRicette);
+    });
   }, []);
 
   useEffect(() => {
@@ -107,7 +123,11 @@ function App() {
   }
   // questo return verrà letto SOLAMENTE se il loading sarà a false
   return (
-    <RicetteContext.Provider value={"sono l'info che cercavi"}>
+    
+    <RicetteContext.Provider value={{
+      chiaviRicette,
+      oggettoRicette
+    }}>
       <Router>
         <Contenitore className="App">
           <header className="app-header">
@@ -128,6 +148,9 @@ function App() {
               </Route>
               <Route exact path={ROTTE.LISTA_DELLA_SPESA}>
                 <ListaSpesa />
+              </Route>
+              <Route exact path={ROTTE.DETTAGLIO_RICETTA + '/:chiave'}>
+                <DettaglioRicetta />
               </Route>
               <Route path={ROTTE.HOME}>
                 <Home />

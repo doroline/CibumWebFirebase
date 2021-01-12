@@ -4,15 +4,21 @@ import MiniaturaRicetta from '../components/MiniaturaRicetta'
 import { RicetteContext } from './App';
 
 const Home = () => {
-const ricette = useContext(RicetteContext);
-
+const ricetteContesto = useContext(RicetteContext);
+//console.log(ricetteContesto);
   return (
     <Contenitore>
-    {ricette}
-        <MiniaturaRicetta />
-        <MiniaturaRicetta />
-        <MiniaturaRicetta />
-        <MiniaturaRicetta />
+      { ricetteContesto.chiaviRicette && ricetteContesto.chiaviRicette.map((chiave) =>(
+        <MiniaturaRicetta
+        //passiamo le props al componente MiniaturaRicetta
+            chiave={chiave}
+            key={chiave}
+            titolo={ricetteContesto.oggettoRicette[chiave].name}
+            url={ricetteContesto.oggettoRicette[chiave].image.url}
+            descrizione={ricetteContesto.oggettoRicette[chiave].description}
+            categoria={ricetteContesto.oggettoRicette[chiave].recipeCategory}
+        />
+      ))}
     </Contenitore>
   );
 };

@@ -1,28 +1,32 @@
 import { useContext} from "react";
-import { RicetteContext } from '../containers/App';
+import { useHistory } from 'react-router-dom';
+import { ROTTE } from '../costanti';
 import styled from "styled-components";
 import Card from "@material-ui/core/Card";
 import CardHeader from "@material-ui/core/CardHeader";
 import CardMedia from "@material-ui/core/CardMedia";
 import CardContent from "@material-ui/core/CardContent";
-const MiniaturaRicetta = () => {
+const MiniaturaRicetta = (props) => {
 
-  const ricette = useContext(RicetteContext);
+  const listaRottePrecedenti = useHistory();
+
+  const cambiaRotta = (nuovaRotta) => {
+    listaRottePrecedenti.push(nuovaRotta);
+  };
+
   return (
     <Contenitore>
-      <Card className="card">
-      {ricette}
-        <CardHeader title="Paella con Gamberi" subheader="Primi Piatti" />
+      <Card className="card" onClick={() =>cambiaRotta(ROTTE.DETTAGLIO_RICETTA + '/' + props.chiave)}>
+     
+        <CardHeader title={props.titolo} subheader={props.categoria} />
         <CardMedia
           className="card-media"
-          image="https://media.soscuisine.com/images/recettes/large/1079.jpg"
-          title="Paella"
+          image={props.url}
+          title={props.titolo}
         />
         <CardContent>
           <div>
-            This impressive paella is a perfect party dish and a fun meal to
-            cook together with your guests. Add 1 cup of frozen peas along with
-            the mussels, if you like.
+          {props.descrizione}
           </div>
         </CardContent>
       </Card>
