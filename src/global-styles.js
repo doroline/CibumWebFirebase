@@ -64,6 +64,14 @@ const GlobalStyles = createGlobalStyle`
   font-size: 11px;
     text-align: center;
 }
+.MuiList-padding {
+      padding-left: 8px!important;
+      padding-right: 8px!important;
+      .share-btn{
+        margin-left:4px;
+        margin-right:4px;
+      }
+  }
 `;
 
 export default GlobalStyles;

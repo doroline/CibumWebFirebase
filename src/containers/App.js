@@ -16,6 +16,7 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import { ROTTE } from "../costanti";
 import DettaglioRicetta from "./DettaglioRicetta";
+import Preferiti from "./Preferiti";
 
 firebase.initializeApp(firebaseConfig);
 
@@ -52,13 +53,12 @@ const logout = () => {
 };
 
 export const RicetteContext = createContext();
+export const UtenteContext = createContext();
 
 function App() {
   // qui creo le variabili di stato per prendere i dati dal nodo ricette di firebase
   const [chiaviRicette, setChiaviRicette] = useState([]); // la inizializzo come un array vuota
-  const [oggettoRicette, setOggettoRicette] = useState({});// la inizializzo come oggetto
-
-
+  const [oggettoRicette, setOggettoRicette] = useState({}); // la inizializzo come oggetto
 
   // stato che utilizzeremo per aprire e chiudere il nostro menu laterale. Il menu può solo essere aperto o chiudo, perciò utilizzo un booleano (true/aperto, false/chiuso)
   const [menuVisibile, setMenuVisibile] = useState(false);
@@ -66,17 +66,20 @@ function App() {
 
   const [utente, setUtente] = useState({ loggato: false });
 
+  const [preferiti, setPreferiti] = useState({});
+
   // grazie allo useEffetc rendiamo vero il nostro loading, lo useEffetc è composto da due elementi separati da virgola, il primo è una funzione il secondo è un array vuoto che indica che dovrà far scatenare la funzione quando l'app sarà pronta (il didMount) e allora gli diremo alla funzione di impostare il loading a false
   useEffect(() => {
     function utenteLoggatoCallBack(utenteObj) {
       // una CallBack è una chiamata ad una funzione, che dovrà avvenire soltanto ad un certo momento e non seguirà il normale flusso degli eventi, in questo caso si avvierà soltanto dopo che firebase ci avrà restituito il "loggato:true" al nostro parametro "utenteObj" e ci permetterà di invocare i cambi di stato anche al di fuori del nostro componente!
       setUtente(utenteObj);
       setLoading(false); // questa è quella che determina la fine del loading e la spostiamo qui dentro perchè io voglio assicurarmi che il loading scompaia solo dopo che Firebase mi avrà restituito i dati dell'utente, altrimenti potrebbe scomparire il login, comparire l'app, ma ancora non ho i dati dell'utente
-    };
+    }
     onUtenteLoggato(utenteLoggatoCallBack); // funzione che intercetta l'avvenuto cambio di stato della login
-  
-    const ricetteReferenza = firebase.database().ref('/ricette');
-    ricetteReferenza.on("value", (ricetteDb) => { // prendo i valori,value, e li metto in ricetteDb
+
+    const ricetteReferenza = firebase.database().ref("/ricette");
+    ricetteReferenza.on("value", (ricetteDb) => {
+      // prendo i valori,value, e li metto in ricetteDb
       const ricetteObj = ricetteDb.val(); // passo i valori di ricetteDb a ricetteObj
       const ricetteArray = Object.keys(ricetteObj); // questa funziona JS ci restituisce sottonforma di array soltanto le chiavi sotto forma di oggetto
       setOggettoRicette(ricetteObj);
@@ -95,7 +98,10 @@ function App() {
         const cloneUtenteDb = utenteDb.val(); // come prima cosa andiamo a leggere e prenderci tutti i valori, i nodi principali del DB per verificare se nel db c'è già un nodo con lo stesso uid
         if (cloneUtenteDb) {
           // così verifico se l'utente già esiste
-          return null; // ok allora non fare nulla
+          // se ho dei preferiti nel mio db, li aggiungo al mio stato preferiti di react appena mi loggo!
+          if (cloneUtenteDb.preferiti) {
+            setPreferiti(cloneUtenteDb.preferiti);
+          }
         } else {
           // se invece non esiste
           utenteReferenza.set({
@@ -114,6 +120,62 @@ function App() {
     // questo ci permette di non dover verificare prima di invocare questa funzione se dobbiamo aprire o chiudere il menu: lui lo capirà da solo!
     setMenuVisibile(!menuVisibile);
   };
+
+  const aggiungiPreferito = (id) => {
+    // aggiungo al mio db, nel nodo utente loggato il mio nuovo preferito, generando una nuova chiave univoca id
+    const preferitoRef = firebase
+      .database()
+      .ref(`/utenti/${utente.uid}/preferiti`)
+      .push(id);
+    const chiavePreferito = preferitoRef.key; // estraggo la chiave
+
+    // creo il nuovo oggetto di preferito a partire da quelli già presenti clonando il miostato preferiti
+    const nuoviPreferiti = { ...preferiti };
+    nuoviPreferiti[chiavePreferito] = id;
+
+    // e qui aggiungo il nuovo preferito
+    setPreferiti(nuoviPreferiti);
+  };
+
+  const rimuoviPreferito = (id) => {
+    const chiaveDaRimuovere = Object.keys(preferiti).find((chiave) => preferiti[chiave] === id); // trasformo lo stato preferiti in un array di chiavi (con Object.keys), e la scorro, lo ciclo, tutto e poi vado a cercare (con il find che si usa con le array) quel elemento che associato ad una chiave particolare  (chiave) sarà uguale al valore di ID che gli stiamo passando
+
+    // rimuoviamo il preferito da firebase utilizzando il metodo remove
+    const preferitoRef = firebase
+      .database()
+      .ref(`/utenti/${utente.uid}/preferiti/${chiaveDaRimuovere}`)
+      .remove();
+
+    // creo il nuovo oggetto di preferito a partire da quelli già presenti clonando il miostato preferiti
+    const nuoviPreferiti = { ...preferiti };
+
+    // rimuovo il preferito dal mio oggetta appena clonato
+    delete nuoviPreferiti[chiaveDaRimuovere];
+
+    setPreferiti(nuoviPreferiti);
+  };
+
+  const isPreferito = (id) => {
+    // questo metodo serve a verificare se una ricetta fa o meno parte dei preferiti
+    //ciclo l'oggeto preferiti e mi trovo se è presente  l'id specificato nell'input (id), se c'è avrò il suo indice nell'array, altrimenti il valore restituito è -1, perchè il findIndex funziona cosi, se trova bene altrimenti mette -1
+    const chiavePreferito = Object.keys(preferiti).findIndex(
+      (chiave) => preferiti[chiave] === id
+    );
+    if (chiavePreferito >= 0) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const togglePreferito = (id) => {
+    if (isPreferito(id)) {
+      return rimuoviPreferito(id);
+    } else {
+      return aggiungiPreferito(id);
+    }
+  };
+
   if (loading) {
     return (
       <ContenitoreLoading>
@@ -123,42 +185,54 @@ function App() {
   }
   // questo return verrà letto SOLAMENTE se il loading sarà a false
   return (
-    
-    <RicetteContext.Provider value={{
-      chiaviRicette,
-      oggettoRicette
-    }}>
-      <Router>
-        <Contenitore className="App">
-          <header className="app-header">
-            {/* questo bottone determina l'apertura o la chiusura del menu*/}
-            <MenuIcon onClick={() => apriChiudiMenu()} />
-            <Menu
-              menuVisibile={menuVisibile}
-              apriChiudiMenu={apriChiudiMenu}
-              logout={logout}
-              loggatiConGoogle={loggatiConGoogle}
-              utente={utente}
-            />
-          </header>
-          <div className="app-corpo">
-            <Switch>
-              <Route path={ROTTE.RICETTE}>
-                <Ricette />
-              </Route>
-              <Route exact path={ROTTE.LISTA_DELLA_SPESA}>
-                <ListaSpesa />
-              </Route>
-              <Route exact path={ROTTE.DETTAGLIO_RICETTA + '/:chiave'}>
-                <DettaglioRicetta />
-              </Route>
-              <Route path={ROTTE.HOME}>
-                <Home />
-              </Route>
-            </Switch>
-          </div>
-        </Contenitore>
-      </Router>
+    <RicetteContext.Provider
+      value={{
+        chiaviRicette,
+        oggettoRicette,
+      }}
+    >
+      <UtenteContext.Provider
+        value={{
+          utente,
+          togglePreferito,
+          isPreferito,
+        }}
+      >
+        <Router>
+          <Contenitore className="App">
+            <header className="app-header">
+              {/* questo bottone determina l'apertura o la chiusura del menu*/}
+              <MenuIcon onClick={() => apriChiudiMenu()} />
+              <Menu
+                menuVisibile={menuVisibile}
+                apriChiudiMenu={apriChiudiMenu}
+                logout={logout}
+                loggatiConGoogle={loggatiConGoogle}
+                utente={utente}
+              />
+            </header>
+            <div className="app-corpo">
+              <Switch>
+                <Route path={ROTTE.RICETTE}>
+                  <Ricette />
+                </Route>
+                <Route exact path={ROTTE.LISTA_DELLA_SPESA}>
+                  <ListaSpesa />
+                </Route>
+                <Route exact path={ROTTE.DETTAGLIO_RICETTA + "/:chiave"}>
+                  <DettaglioRicetta chiave="/:chiave"/>
+                </Route>
+                <Route exact path={ROTTE.PREFERITI}>
+                  <Preferiti />
+                </Route>
+                <Route path={ROTTE.HOME}>
+                  <Home />
+                </Route>
+              </Switch>
+            </div>
+          </Contenitore>
+        </Router>
+      </UtenteContext.Provider>
     </RicetteContext.Provider>
   );
 }

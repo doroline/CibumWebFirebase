@@ -80,6 +80,9 @@ const Menu = (props) => {
           <ListItem button key="Lista della Spesa" onClick={() => cambiaRotta(ROTTE.LISTA_DELLA_SPESA)}>
             <ListItemText primary="Lista della Spesa" />
           </ListItem>
+          <ListItem button key="Preferiti" onClick={() => cambiaRotta(ROTTE.PREFERITI)}>
+            <ListItemText primary="Preferiti" />
+          </ListItem>
         </List>
         {!props.utente.loggato && (
           <Button onClick={() => props.loggatiConGoogle()}>Accedi con Google</Button>
