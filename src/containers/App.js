@@ -17,6 +17,7 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { ROTTE } from "../costanti";
 import DettaglioRicetta from "./DettaglioRicetta";
 import Preferiti from "./Preferiti";
+import Login from "./Login";
 
 firebase.initializeApp(firebaseConfig);
 
@@ -224,6 +225,9 @@ function App() {
                 </Route>
                 <Route exact path={ROTTE.PREFERITI}>
                   <Preferiti />
+                </Route>
+                <Route exact path={ROTTE.LOGIN}>
+                  <Login loggatiConGoogle={loggatiConGoogle}/>
                 </Route>
                 <Route path={ROTTE.HOME}>
                   <Home />
