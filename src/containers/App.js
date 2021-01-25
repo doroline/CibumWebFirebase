@@ -69,6 +69,8 @@ function App() {
 
   const [preferiti, setPreferiti] = useState({});
 
+  const [listaSpesa, setListaSpesa] = useState({});
+
   // grazie allo useEffetc rendiamo vero il nostro loading, lo useEffetc è composto da due elementi separati da virgola, il primo è una funzione il secondo è un array vuoto che indica che dovrà far scatenare la funzione quando l'app sarà pronta (il didMount) e allora gli diremo alla funzione di impostare il loading a false
   useEffect(() => {
     function utenteLoggatoCallBack(utenteObj) {
@@ -103,6 +105,9 @@ function App() {
           if (cloneUtenteDb.preferiti) {
             setPreferiti(cloneUtenteDb.preferiti);
           }
+          if(cloneUtenteDb.listaSpesa){
+            setListaSpesa(cloneUtenteDb.listaSpesa);
+          }
         } else {
           // se invece non esiste
           utenteReferenza.set({
@@ -122,6 +127,7 @@ function App() {
     setMenuVisibile(!menuVisibile);
   };
 
+  // GESTIONE PREFERITI
   const aggiungiPreferito = (id) => {
     // aggiungo al mio db, nel nodo utente loggato il mio nuovo preferito, generando una nuova chiave univoca id
     const preferitoRef = firebase
@@ -176,7 +182,56 @@ function App() {
       return aggiungiPreferito(id);
     }
   };
+// FINE GESTIONE PREFERITI
 
+
+// GESTIONE LISTA DELLA SPESA
+const aggiungiElemInListaSpesa = (id) =>{
+  const ingredientiArray = oggettoRicette[id]?.recipeIngredient.reduce((accumulatore, valoreCorrente) => {
+      const nuovoIngrediente = { value: valoreCorrente, checked: false};
+      accumulatore.push(nuovoIngrediente);
+      return accumulatore;
+  }, []); // il secondo paramentro stabilisce quale valore in output vogliamo, delle [] se voglio un array o dell {} se voglio un oggetto
+  if(ingredientiArray){
+    const listaSpesaRef = firebase.database().ref(`/utenti/${utente.uid}/listaSpesa/${id}`).set(ingredientiArray);
+    const nuovaListaSpesa = {...listaSpesa};// mi copio l'attuale lista della spesa
+    nuovaListaSpesa[id] = ingredientiArray;// gli dico di aggiungere all'elemento con quell'id specifico, es: cannelloni, gli ingredientiArray
+    setListaSpesa(nuovaListaSpesa); // rimposto nuovamente la lista della spesa con l'aggiunta del nuovo e elemento e dei suoi ingredienti
+  }
+};
+
+const rimuoviElemInListaSpesa = (id) => {
+  const listaSpesaRef = firebase.database().ref(`/utenti/${utente.uid}/listaSpesa/${id}`).remove();
+  const nuovaListaSpesa = {...listaSpesa};
+  delete nuovaListaSpesa[id];
+  setListaSpesa(nuovaListaSpesa); 
+}
+
+const isInListaSpesa = (id) => {
+  if (listaSpesa[id]) { // così gli dico, SE esiste nella var listaSpesa un oggetto con quel id che gli passeremo, restituiscimi il true
+    return true;
+  } else {
+    return false;
+  }
+};
+
+const toggleElemInListaSpesa = (id) => {
+  if (isInListaSpesa(id)) {
+    return rimuoviElemInListaSpesa(id);
+  } else {
+    return aggiungiElemInListaSpesa(id);
+  }
+};
+
+const toggleCheckIngredienti = (id, index) =>{
+  const isChecked = listaSpesa[id][index]?.checked; // qui verifico se checked di quel nodo specifico con l'id (es cannelloni) di quel determinato ingrediente preso con l'index dell'array, sia a true o a false
+  const checkedRef = firebase.database().ref(`/utenti/${utente.uid}/listaSpesa/${id}/${index}/checked`).set(!isChecked); // qui gli dico di scrivere nel db esattamente nel nodo checked il CONTRARIO di coa dice la costante isChecked, così l'imposterà a true se era a false, e viceversa, facendo da TOGGLE
+  const nuovaListaSpesa = {...listaSpesa};
+  nuovaListaSpesa[id][index].checked = !isChecked;
+  setListaSpesa(nuovaListaSpesa);
+};
+
+// FINE GESTIONE LISTA DELLA SPESA
   if (loading) {
     return (
       <ContenitoreLoading>
@@ -197,6 +252,10 @@ function App() {
           utente,
           togglePreferito,
           isPreferito,
+          isInListaSpesa,
+          toggleCheckIngredienti,
+          toggleElemInListaSpesa,
+          listaSpesa,
         }}
       >
         <Router>

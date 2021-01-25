@@ -10,6 +10,8 @@ import CardActions from "@material-ui/core/CardActions";
 import IconButton from '@material-ui/core/IconButton';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
+import AddShoppingCart from '@material-ui/icons/AddShoppingCart';
+import RemoveShoppingCart from '@material-ui/icons/RemoveShoppingCart';
 import { colors } from '../global-styles';
 
 import { UtenteContext } from "../containers/App";
@@ -26,6 +28,11 @@ const MiniaturaRicetta = (props) => {
   const gestisciPreferito = (evento) =>{
     evento.stopPropagation();
     contestoUtente.togglePreferito(props.chiave);
+  };
+
+  const gestisciListaSpesa = (evento) =>{
+    evento.stopPropagation();
+    contestoUtente.toggleElemInListaSpesa(props.chiave);
   };
 //console.log(props.chiave);
   return (
@@ -47,6 +54,9 @@ const MiniaturaRicetta = (props) => {
        <CardActions disableSpacing>
           <IconButton onClick={(evento)=> gestisciPreferito(evento)}>
               {contestoUtente.isPreferito(props.chiave) ? <FavoriteIcon htmlColor={colors.mainOrange}/> : <FavoriteBorderIcon htmlColor={colors.mainOrange}/>}
+          </IconButton>
+          <IconButton onClick={(evento)=> gestisciListaSpesa(evento)}>
+              {contestoUtente.isInListaSpesa(props.chiave) ? <RemoveShoppingCart htmlColor={colors.mainOrange}/> : <AddShoppingCart htmlColor={colors.mainOrange}/>}
           </IconButton>
         </CardActions>
         )}
