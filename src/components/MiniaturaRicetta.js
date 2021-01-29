@@ -45,11 +45,13 @@ const MiniaturaRicetta = (props) => {
           image={props.url}
           title={props.titolo}
         />
-        <CardContent>
+      { !props.slideShow && (
+      <CardContent>
           <div>
           {props.descrizione}
           </div>
         </CardContent>
+        )}
      {contestoUtente?.utente?.loggato && (   
        <CardActions disableSpacing>
           <IconButton onClick={(evento)=> gestisciPreferito(evento)}>

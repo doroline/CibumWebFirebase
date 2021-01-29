@@ -18,6 +18,8 @@ import { Share } from "@material-ui/icons";
 
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
+import AddShoppingCart from '@material-ui/icons/AddShoppingCart';
+import RemoveShoppingCart from '@material-ui/icons/RemoveShoppingCart';
 
 import { UtenteContext } from "../containers/App";
 
@@ -38,11 +40,15 @@ export default function DettaglioRicetta(props) {
   const gestisciPreferito = () =>{
     contestoUtente.togglePreferito(chiave);
   };
+  const gestisciListaSpesa = () =>{
+    contestoUtente.toggleElemInListaSpesa(chiave);
+  };
 console.log(chiave);
   return (
     <Contenitore imgUrl={ricetta?.image?.url}>
       <div className="header-container">
         <div className="header-wrapper">
+      
           <IconButton
             className="share btn"
             aria-label="condivi"
@@ -50,6 +56,16 @@ console.log(chiave);
           >
             <Share htmlColor={colors.mainOrange} />
           </IconButton>
+          {contestoUtente?.utente?.loggato && ( 
+            <>
+          <IconButton onClick={()=> gestisciPreferito()} className="love btn">
+              {contestoUtente.isPreferito(chiave) ? <FavoriteIcon htmlColor={colors.mainOrange}/> : <FavoriteBorderIcon htmlColor={colors.mainOrange}/>}
+          </IconButton>
+          <IconButton onClick={()=> gestisciListaSpesa()} className="shop btn">
+              {contestoUtente.isInListaSpesa(chiave) ? <RemoveShoppingCart htmlColor={colors.mainOrange}/> : <AddShoppingCart htmlColor={colors.mainOrange}/>}
+          </IconButton>
+          </>
+          )}
           <Menu
             id="share-menu"
             className="share-menu"
@@ -112,11 +128,6 @@ console.log(chiave);
             </div>
           )}
         </div>
-        {contestoUtente?.utente?.loggato && ( 
-        <IconButton onClick={()=> gestisciPreferito()}>
-              {contestoUtente.isPreferito(chiave) ? <FavoriteIcon htmlColor={colors.mainOrange}/> : <FavoriteBorderIcon htmlColor={colors.mainOrange}/>}
-          </IconButton>
-        )}
       </div>
 
       <div className="contenitoreTorna">
@@ -168,9 +179,15 @@ const Contenitore = styled.div`
         position: absolute;
         background-color: white;
         top: -25px;
-        right: 0px;
+        
         &.share {
-          right:106;
+          right:0px;
+        }
+        &.love {
+          right:60px;
+        }
+        &.shop {
+          right:120px;
         }
 
       }
