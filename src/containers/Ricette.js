@@ -6,6 +6,7 @@ import { normalizzaRicette, filtra, isFiltriObjSelected} from "../utils/filtri";
 import { colors, breakpoints } from '../global-styles';
 import noResult from '../assets/img/no-result.svg';
 import { FILTRI } from '../costanti';
+import Button from '@material-ui/core/Button';
 
 import SearchIcon from "@material-ui/icons/Search";
 import Radio from '@material-ui/core/Radio';
@@ -18,6 +19,10 @@ import AccordionSummary from '@material-ui/core/AccordionSummary';
 import AccordionDetails from '@material-ui/core/AccordionDetails';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
+import Pagination from '@material-ui/lab/Pagination';
+
+const RICETTE_PER_PAGINA = 6; //decide il numero di ricette per pagina
+
 const Ricette = () => {
   const ricetteContesto = useContext(RicetteContext);
   const utenteContesto = useContext(UtenteContext);
@@ -26,6 +31,9 @@ const Ricette = () => {
   const [ricetteNormalizzateArray, setRicetteNormalizzateArray] = useState([]);
   const [ricetteFiltrate, setRicetteFiltrate] = useState([]);
   const [barraRicercaInput, setBarraRicercaInput] = useState(null);
+
+  const [pagina, setPagina] = useState(1);
+
 
   const [filtriRicercaInput, setFiltriRicercaInput] = useState({
     CATEGORIA: null,
@@ -37,7 +45,8 @@ const Ricette = () => {
     const newRicetteNormalizzate = normalizzaRicette(oggettoRicette);
     setRicetteNormalizzateArray(newRicetteNormalizzate);
     setRicetteFiltrate(newRicetteNormalizzate);
-  }, [oggettoRicette]);
+   
+  }, [ricetteContesto]);
   /* così facendo dico allo useEffect di aggiornarsi sempre quando cambia oggettoRicette 
 che a sua volte segue le direttive delle ricette presa da firebase, se aggiungiamo una 
 ricetta in firebase il context si aggiorna e di conseguenza anche oggetto ricette, e si aggiorna lo useEffect */
@@ -49,6 +58,7 @@ useEffect(() => {
    setRicetteFiltrate(newRicetteFiltrate); // imposto setRicetteFiltrate con quello che dice il filtraggio
  } else {
   setRicetteFiltrate(ricetteNormalizzateArray);
+
  }
 }, [barraRicercaInput , filtriRicercaInput]);
 
@@ -74,6 +84,41 @@ useEffect(() => {
 
     setFiltriRicercaInput(newFiltriObj);
   };
+
+  //metodo che gestisce la paginazione
+  const cambiaPagina = (evento, nuovaPagina) => {
+    window.scrollTo(0,0);
+    setPagina(nuovaPagina);
+  };
+
+   const ordina = () => {
+    
+    /*ogni volta che modifico una var di stato, sul finale devo sempre
+    fare il clone, mettendo quadre o graffe in base al tipo di stato e poi
+    fargli il set e passargli il clone dello stato di partenza
+    */
+    const newRicetteFiltrate = [...ricetteFiltrate];
+  
+    // sort è un metodo degli array che accetta due paramentri in input, A e B
+    newRicetteFiltrate.sort((a, b) => {
+      return a.cost - b.cost;
+    });
+
+    setRicetteFiltrate(newRicetteFiltrate);
+   }
+
+  const ordinaNome = () => {
+  
+    const newRicetteFiltrate = [...ricetteFiltrate];
+
+    newRicetteFiltrate.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+    });
+    
+    setRicetteFiltrate(newRicetteFiltrate);
+  }
+
+
   return (
     <Contenitore>
       <div className="searchbar-container">
@@ -128,27 +173,37 @@ useEffect(() => {
                   ))}
                 </RadioGroup>
               </FormControl>
+
+
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Ordina per tempi di cottura</FormLabel>
+                <Button onClick={()=>ordina()}>ORDINA</Button>
+              </FormControl>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Ordina per Nome</FormLabel>
+                <Button onClick={()=>ordinaNome()}>ORDINA Per NOME</Button>
+              </FormControl>
             </AccordionDetails>
           </Accordion>
         </div>
         <div className="search-results-container">
-          {ricetteFiltrate.map((ricettaNormalizzata) => (
+          {ricetteFiltrate
+          //.sort((a, b) => a.cost - b.cost) // cosi facendo ordino direttamente all'avvio le ricette per costo, un campo numerico
+          .sort((a, b) => a.name.localeCompare(b.name)) // cosi facendo ordino direttamente all'avvio le ricette per un campo stringa esempio il nome
+          .reverse() // qui decide se farli ASC o DES
+          .slice((pagina-1) * RICETTE_PER_PAGINA, RICETTE_PER_PAGINA * pagina).map((ricettaNormalizzata) => (
             <MiniaturaRicetta
               chiave={ricettaNormalizzata.id}
               key={ricettaNormalizzata.id}
               titolo={ricetteContesto.oggettoRicette[ricettaNormalizzata.id].name}
               url={ricetteContesto.oggettoRicette[ricettaNormalizzata.id].image.url}
               descrizione={ricetteContesto.oggettoRicette[ricettaNormalizzata.id].description}
-              categoria={
-                ricetteContesto.oggettoRicette[ricettaNormalizzata.id]
-                  .recipeCategory
-              }
+              categoria={ricetteContesto.oggettoRicette[ricettaNormalizzata.id].recipeCategory}
               slideShow={false}
             />
           ))}
           {ricetteFiltrate.length === 0 && (
             <div className="no-result">
-            nulla
             </div>
           )
           }
@@ -156,6 +211,18 @@ useEffect(() => {
 
       </div>
      
+     { ricetteFiltrate.length > RICETTE_PER_PAGINA && (
+        <Pagination 
+          className="pagination"
+          count={Math.ceil(ricetteFiltrate.length/RICETTE_PER_PAGINA)} /* questo stabilisce il numero di pagine totali 
+          in base a quanti prodotti ci sono, anche qui si usa il ceil per arrotondare 
+          in eccesso nel caso in cui l'operazione desse un risultato con la virgola*/
+          page={pagina} // ci metto dentro lo stato 'pagina'
+          onChange={(evento, nuovaPagina) => cambiaPagina(evento, nuovaPagina)} /* anche onChange
+          è un parametro nativo del Pagination, e vuole due paramentri, un evento e la pagina nuova 
+          che verrà cliccata */
+        />
+     )}
   
     </Contenitore>
   );
